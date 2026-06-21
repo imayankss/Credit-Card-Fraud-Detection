@@ -25,6 +25,10 @@ data/processed/*
 *.csv
 *.zip
 *.parquet
+*.joblib
+
+# Generated pipeline artifacts
+artifacts/
 
 # Models
 models/*.joblib

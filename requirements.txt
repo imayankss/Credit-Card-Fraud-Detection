@@ -9,6 +9,7 @@ seaborn
 plotly
 shap
 joblib
+pyarrow
 pyyaml
 streamlit
 fastapi
