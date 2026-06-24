@@ -1,251 +1,166 @@
 # Credit Card Fraud Detection & Risk Scoring System
 
-## Overview
+An end-to-end machine learning project for detecting fraudulent credit card
+transactions in an extremely imbalanced dataset. The project is structured like
+a small production-style ML system: data validation, leakage-safe preprocessing,
+baseline models, XGBoost, validation-focused model comparison, threshold tuning,
+SHAP explainability, and one locked final evaluation.
 
-This project is a modular, production-style machine learning system for detecting
-fraudulent credit card transactions and converting model predictions into
-business-friendly fraud risk scores. It is built to look and behave like a small
-real-world fraud detection pipeline rather than a single exploratory notebook —
-with clean architecture, reusable code, saved artifacts, and evaluation reports.
+## Why This Problem Is Hard
 
-> **Status:** Day 1 — project scaffolding only. No data loading, preprocessing,
-> model training, or inference logic has been implemented yet.
+Fraud is rare. In this dataset, only 492 out of 284,807 transactions are fraud:
 
-## Problem Statement
+| Item | Value |
+|---|---:|
+| Total transactions | 284,807 |
+| Fraud cases | 492 |
+| Legitimate transactions | 284,315 |
+| Fraud rate | 0.1727% |
+| Imbalance ratio | 577.88:1 |
 
-Credit card fraud detection is a **highly imbalanced binary classification problem**.
-Fraudulent transactions represent a tiny fraction of all transactions, which means
-naive models and naive metrics can be dangerously misleading.
-
-The goal of this project is to:
-
-- Detect fraudulent transactions in a way that is sensitive to class imbalance.
-- Go beyond a binary "fraud / not fraud" label by producing a fraud probability,
-  a risk level, and a recommended business action.
-- Make explicit, business-aware tradeoffs between catching more fraud (recall)
-  and minimizing false alarms (precision).
+Accuracy is misleading here. A model can predict every transaction as legitimate
+and still score above 99% accuracy while catching zero fraud. This project
+therefore prioritizes PR-AUC, recall, precision, F1-score, ROC-AUC, and
+confusion matrix analysis.
 
 ## Dataset
 
-This project uses the **Credit Card Fraud Detection** dataset from Kaggle:
-https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud
+The project uses the Kaggle Credit Card Fraud Detection dataset. The `V1` to
+`V28` fields are anonymized PCA-transformed features, with `Time`, `Amount`,
+and `Class` as additional columns. The raw `creditcard.csv` file is not meant
+to be committed; place it in `data/raw/creditcard.csv`.
 
-The dataset contains anonymized credit card transactions made by European
-cardholders.
+## Tech Stack
 
-**Columns:**
+- Python, pandas, NumPy
+- scikit-learn
+- XGBoost
+- SHAP
+- matplotlib
+- pytest
+- joblib, pyarrow
 
-| Column      | Description                                                        |
-|-------------|---------------------------------------------------------------------|
-| `Time`      | Seconds elapsed between this transaction and the first transaction |
-| `V1`–`V28`  | Anonymized, PCA-transformed numerical features                     |
-| `Amount`    | Transaction amount                                                  |
-| `Class`     | Target label — `1` = fraud, `0` = legitimate                       |
-
-**Important limitation:** Because `V1`–`V28` are anonymized PCA components, any
-explainability work later in this project (e.g. feature importance, SHAP) can
-only describe *model behavior*. It cannot be mapped back to real-world fields
-such as merchant, location, card type, or device.
-
-The raw dataset file (`creditcard.csv`) is **not committed to this repository**.
-It must be downloaded manually and placed in `data/raw/`.
-
-## Why Accuracy Is Misleading
-
-Fraud is rare. If, for example, 99.8% of transactions in the dataset are
-legitimate, a model that predicts "legitimate" for every single transaction
-would still score about 99.8% accuracy — while catching zero fraud.
-
-For this reason, this project does **not** optimize for accuracy. Instead it
-prioritizes metrics that are meaningful for the rare, positive (fraud) class:
-
-1. **PR-AUC** (primary)
-2. **Recall**
-3. **Precision**
-4. **F1-score**
-5. **ROC-AUC** (secondary)
-6. **Accuracy** (reported only, for contrast)
-
-## Planned Architecture
-
-The system is organized into independent layers so that each stage of the ML
-workflow can be developed, tested, and reused on its own:
+## Project Structure
 
 ```text
-Data Layer        → load and validate raw transaction data
-Preprocessing      → leakage-safe scaling, splitting, imbalance handling
-Modeling           → baseline, intermediate, and advanced classifiers
-Evaluation         → fraud-focused metrics, plots, threshold tuning, cost analysis
-Risk Scoring       → probability → Low / Medium / High risk + recommended action
-Explainability     → feature importance / SHAP (with honest limitations)
-Inference          → reusable end-to-end prediction pipeline
-Interfaces (later) → optional Streamlit dashboard and FastAPI endpoint
+src/data/              data loading, validation, and split helpers
+src/preprocessing/     leakage-safe preprocessing pipeline
+src/models/            baseline and XGBoost model utilities
+src/evaluation/        metrics, comparison, threshold tuning, final evaluation
+src/explainability/    SHAP explainability helpers
+scripts/               reproducible day-by-day pipeline runners
+tests/                 lightweight synthetic unit tests
+reports/               generated Markdown reports and metrics
+artifacts/models/      trained model artifacts
 ```
 
-## Folder Structure
+## Setup
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+```
+
+Then download the Kaggle dataset and place it at:
 
 ```text
-credit-card-fraud-risk-scoring/
-├── data/
-│   ├── raw/
-│   ├── interim/
-│   └── processed/
-├── notebooks/
-├── src/
-│   ├── data/
-│   ├── preprocessing/
-│   ├── models/
-│   ├── evaluation/
-│   ├── explainability/
-│   ├── inference/
-│   └── utils/
-│       ├── paths.py
-│       ├── config.py
-│       └── logger.py
-├── models/
-├── reports/
-│   ├── figures/
-│   └── metrics/
-├── app/
-├── api/
-├── tests/
-│   └── test_project_setup.py
-├── configs/
-│   └── config.yaml
-├── scripts/
-├── .gitignore
-├── README.md
-├── requirements.txt
-├── pyproject.toml
-└── main.py
+data/raw/creditcard.csv
 ```
 
-## Planned ML Workflow
-
-1. Load and validate the raw dataset.
-2. Perform EDA on class imbalance, `Amount`, `Time`, and selected PCA features.
-3. Build a leakage-safe preprocessing pipeline (split first, then fit scaling
-   and other transformations only on the training data).
-4. Split data into train / validation / test sets using stratified sampling.
-5. Train a Logistic Regression baseline.
-6. Train a Random Forest model.
-7. Train an XGBoost or LightGBM model.
-8. Compare models using fraud-focused metrics.
-9. Tune the classification threshold on the validation set (never on test).
-10. Run cost-sensitive threshold analysis using business costs for false
-    positives and false negatives.
-11. Convert fraud probability into a Low / Medium / High risk score and
-    recommended action.
-12. Generate feature importance / SHAP explanations for the final model.
-13. Wrap everything in a reusable inference pipeline.
-
-## Planned Models
-
-| Stage        | Model                     |
-|--------------|----------------------------|
-| Baseline     | Logistic Regression        |
-| Intermediate | Random Forest               |
-| Advanced     | XGBoost or LightGBM         |
-
-Class imbalance will be handled via class weighting, `scale_pos_weight`, and/or
-SMOTE applied **only** to the training split.
-
-## Evaluation Metrics
-
-The following will be reported for every model:
-
-- Precision, Recall, F1-score
-- PR-AUC (primary metric) and ROC-AUC (secondary metric)
-- Confusion matrix, specificity, false positive rate, false negative rate
-- Accuracy (for contrast only — not optimized)
-
-## Threshold Tuning Plan
-
-Rather than using the default `0.5` probability cutoff, this project will sweep
-thresholds on the **validation set** and report precision, recall, F1, F2, and
-confusion matrix counts at each threshold. Thresholds will be selected to:
-
-- Maximize F1 or F2 score, and/or
-- Hit a target recall or target precision, and/or
-- Minimize total business cost (see below).
-
-## Risk Scoring Plan
-
-Each transaction's fraud probability will be converted into a risk band and a
-recommended action:
-
-| Fraud Probability       | Risk Level | Recommended Action                          |
-|--------------------------|------------|-----------------------------------------------|
-| `0.00` – `0.20`          | Low        | Approve transaction                            |
-| `0.20` – `0.60`          | Medium     | Step-up authentication or manual review        |
-| `0.60` – `1.00`          | High       | Block transaction or urgent manual review      |
-
-Risk thresholds are configurable in `configs/config.yaml`.
-
-### Business Cost Analysis (planned)
-
-False positives and false negatives carry different business costs:
-
-- **False Positive** — legitimate transaction flagged as fraud → customer
-  friction and manual review cost.
-- **False Negative** — fraudulent transaction missed → direct financial loss
-  and trust damage.
-
-A configurable cost model (`false_positive_cost`, `false_negative_cost`) will
-be used to select a threshold that minimizes total expected cost, rather than
-relying on a one-size-fits-all default cutoff.
-
-## Setup Instructions
-
-1. Clone the repository and `cd` into it.
-2. Create and activate a virtual environment:
+## Reproduce The Pipeline
 
 ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+python3 scripts/run_day2_eda.py
+python3 scripts/run_day3_preprocessing.py
+python3 scripts/run_day4_baseline_models.py
+python3 -m scripts.run_day5_advanced_models
+python3 -m scripts.run_day6_threshold_tuning
+python3 -m scripts.run_day7_explainability
+python3 -m scripts.run_final_evaluation
+python3 -m scripts.run_project_audit
 ```
 
-3. Install dependencies:
+Run tests:
 
 ```bash
-   pip install -r requirements.txt
+python3 -m compileall src scripts tests
+pytest
 ```
 
-4. (Later step) Download `creditcard.csv` from Kaggle and place it at
-   `data/raw/creditcard.csv`. This step is not required for Day 1 setup.
+## Modeling Summary
 
-## How to Run the Project Initialization Check
+Day 4 trained Dummy, Logistic Regression, and Random Forest baselines. Day 5
+added XGBoost and selected the champion model by validation PR-AUC.
 
-Day 1 only includes a setup/sanity check — no data loading or training yet.
+| Model | Validation PR-AUC | Validation ROC-AUC |
+|---|---:|---:|
+| XGBoost | 0.8129 | 0.9851 |
+| Random Forest | 0.8125 | 0.9309 |
+| Logistic Regression | 0.6275 | 0.9684 |
+| Dummy baseline | 0.0017 | 0.5000 |
 
-```bash
-python main.py
-```
+Champion model: `xgboost_baseline`.
 
-This will:
+## Threshold Tuning
 
-- Load `configs/config.yaml`
-- Initialize the project logger
-- Print the project name and version
-- Print `Project initialized successfully.`
+The champion model was tuned on validation data only. The test set was not used
+for threshold selection.
 
-You can also run the setup tests:
+| Threshold | Precision | Recall | F1 | Use |
+|---:|---:|---:|---:|---|
+| 0.50 | 0.6061 | 0.8108 | 0.6936 | Default |
+| 0.98 | 0.9138 | 0.7162 | 0.8030 | Best validation F1 |
+| 0.53 | 0.6250 | 0.8108 | 0.7059 | Recommended business threshold |
 
-```bash
-pytest tests/test_project_setup.py
-```
+Recommended operating threshold: `0.53`, selected as the highest-precision
+threshold with validation recall at least 0.80.
+
+## Explainability
+
+Day 7 uses SHAP on a small validation sample to explain the already-trained
+XGBoost model. SHAP is used only for explanation, not tuning, feature selection,
+or model changes. Because most features are PCA-anonymized, the explanations
+describe model behavior over transformed components rather than real-world
+merchant or customer attributes.
+
+Generated outputs:
+
+- `reports/explainability/shap_feature_importance.csv`
+- `reports/explainability/shap_top_features.json`
+- `reports/explainability/shap_summary_report.md`
+- `reports/figures/shap_summary_bar.png`
+- `reports/figures/shap_top_features.png`
+
+## Final Evaluation
+
+The final evaluation uses the locked XGBoost model and locked threshold `0.53`
+on the held-out test split once. No threshold tuning, model selection,
+preprocessing changes, or feature changes are performed using test results.
+
+Final evaluation outputs:
+
+- `reports/final/final_model_evaluation.json`
+- `reports/final/final_evaluation_report.md`
+- `reports/final/final_project_report.md`
+- `reports/final/project_audit_checklist.md`
+
+## Limitations
+
+- The dataset is anonymized and historical, so feature interpretation is limited.
+- SHAP explains transformed PCA features, not original business fields.
+- No production deployment, monitoring, or live feedback loop is included.
+- Threshold costs are discussed qualitatively; a real deployment would require
+  fraud-loss and review-cost estimates.
 
 ## Future Work
 
-- Dataset loading and schema validation
-- Exploratory data analysis notebook
-- Leakage-safe preprocessing and train/validation/test split
-- Logistic Regression, Random Forest, and XGBoost/LightGBM training
-- Fraud-focused evaluation, threshold tuning, and cost-sensitive analysis
-- Risk scoring and a reusable inference pipeline
-- SHAP / feature importance explainability
-- Optional Streamlit dashboard and FastAPI prediction endpoint
-- Automated tests across all modules
+- Add cost-sensitive threshold optimization with real business costs.
+- Add monitoring for class drift and calibration drift.
+- Add model calibration analysis.
+- Package inference behind an API or dashboard only after validation with
+  production requirements.
 
-No model results are reported in this README until models have actually been
-trained and evaluated.
+## Author
+
+Mayank Suryavanshi

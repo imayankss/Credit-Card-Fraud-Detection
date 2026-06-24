@@ -1,0 +1,122 @@
+[
+  {
+    "feature": "V4",
+    "mean_abs_shap_value": 1.9142299890518188
+  },
+  {
+    "feature": "V14",
+    "mean_abs_shap_value": 1.808449149131775
+  },
+  {
+    "feature": "V12",
+    "mean_abs_shap_value": 0.8405233025550842
+  },
+  {
+    "feature": "V10",
+    "mean_abs_shap_value": 0.603617250919342
+  },
+  {
+    "feature": "V3",
+    "mean_abs_shap_value": 0.5067201256752014
+  },
+  {
+    "feature": "V11",
+    "mean_abs_shap_value": 0.3776259422302246
+  },
+  {
+    "feature": "V26",
+    "mean_abs_shap_value": 0.3205467760562897
+  },
+  {
+    "feature": "V16",
+    "mean_abs_shap_value": 0.3183101415634155
+  },
+  {
+    "feature": "Amount",
+    "mean_abs_shap_value": 0.3139292001724243
+  },
+  {
+    "feature": "V8",
+    "mean_abs_shap_value": 0.30486539006233215
+  },
+  {
+    "feature": "Time",
+    "mean_abs_shap_value": 0.2917476296424866
+  },
+  {
+    "feature": "V15",
+    "mean_abs_shap_value": 0.29115307331085205
+  },
+  {
+    "feature": "V7",
+    "mean_abs_shap_value": 0.2876681983470917
+  },
+  {
+    "feature": "V28",
+    "mean_abs_shap_value": 0.27987873554229736
+  },
+  {
+    "feature": "V21",
+    "mean_abs_shap_value": 0.2794002294540405
+  },
+  {
+    "feature": "V24",
+    "mean_abs_shap_value": 0.2671138048171997
+  },
+  {
+    "feature": "V25",
+    "mean_abs_shap_value": 0.2581733167171478
+  },
+  {
+    "feature": "V18",
+    "mean_abs_shap_value": 0.25494012236595154
+  },
+  {
+    "feature": "V19",
+    "mean_abs_shap_value": 0.24990949034690857
+  },
+  {
+    "feature": "V20",
+    "mean_abs_shap_value": 0.21092715859413147
+  },
+  {
+    "feature": "V27",
+    "mean_abs_shap_value": 0.2069297879934311
+  },
+  {
+    "feature": "V17",
+    "mean_abs_shap_value": 0.1971028596162796
+  },
+  {
+    "feature": "V22",
+    "mean_abs_shap_value": 0.18647515773773193
+  },
+  {
+    "feature": "V13",
+    "mean_abs_shap_value": 0.1821814775466919
+  },
+  {
+    "feature": "V6",
+    "mean_abs_shap_value": 0.17945748567581177
+  },
+  {
+    "feature": "V5",
+    "mean_abs_shap_value": 0.1712491810321808
+  },
+  {
+    "feature": "V1",
+    "mean_abs_shap_value": 0.16443951427936554
+  },
+  {
+    "feature": "V2",
+    "mean_abs_shap_value": 0.14907829463481903
+  },
+  {
+    "feature": "V9",
+    "mean_abs_shap_value": 0.13338987529277802
+  },
+  {
+    "feature": "V23",
+    "mean_abs_shap_value": 0.10089807212352753
+  }
+]
