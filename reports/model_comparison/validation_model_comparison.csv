@@ -1,0 +1,5 @@
+model_name,pr_auc,roc_auc,precision,recall,f1,validation_rows,validation_frauds
+xgboost_baseline,0.8129,0.9851,0.6061,0.8108,0.6936,42721,74
+random_forest,0.8125,0.9309,0.9811,0.7027,0.8189,42721,74
+logistic_regression,0.6275,0.9684,0.067,0.8784,0.1245,42721,74
+dummy_baseline,0.0017,0.5,0.0,0.0,0.0,42721,74
